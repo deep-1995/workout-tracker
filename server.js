@@ -1,12 +1,12 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3006;
 const db = require("./models");
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static("/public/"));
+app.use(express.static("public"));
 
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", {
   useNewUrlParser: true,
@@ -21,7 +21,7 @@ require("./routes/html-routes.js")(app);
 */
 
 app.get("/api/workouts", (req, res) => {
-  db.Exercise.findAll({}, (err, data) => {
+  db.Workout.find({}, (err, data) => {
     if (err) {
       console.log(err);
     } else {
@@ -32,33 +32,31 @@ app.get("/api/workouts", (req, res) => {
 
 app.post("/api/workouts", ({ body }, res) => {
   console.log(body);
-  db.Exercise.insert(body, (err, data) => {
+  db.Workout.create({}).then((err, data) => {
     if (err) {
       console.log(err);
     } else {
-      res.send(data);
+      res.json(data);
     }
   });
 });
 
-app.get("/api/workouts/:id", (req, res) => {
-  db.Exercise.findOne(
-    {
-      _id: mongoose.ObjectId(req.params.id),
-    },
-    (err, data) => {
+app.get("/api/workouts/range", (req, res) => {
+  db.Workout.find({})
+    .sort({ _id: 1 })
+    .limit(7)
+    .then((err, data) => {
       if (err) {
         res.send(err);
         console.log(err);
       } else {
         res.send(data);
       }
-    }
-  );
+    });
 });
 
 app.put("/api/workouts/:id", (req, res) => {
-  db.Exercise.update(
+  db.Workout.update(
     {
       _id: mongoose.ObjectId(req.params.id),
     },
@@ -80,7 +78,7 @@ app.put("/api/workouts/:id", (req, res) => {
 });
 
 app.delete("/api/workouts/:id", (req, res) => {
-  db.Exercise.remove(
+  db.Workout.remove(
     {
       _id: mongoose.ObjectId(req.params.id),
     },
